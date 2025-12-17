@@ -1,6 +1,11 @@
 // Firebase imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+/* -----------------------------
+   CONFIG
+--------------------------------*/
+const ITEM_COUNT = 28;
 
 /* -----------------------------
    FIREBASE CONFIG
@@ -22,6 +27,38 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 /* -----------------------------
+   BUILD INVENTORY GRID
+--------------------------------*/
+function buildInventoryGrid() {
+  const grid = document.getElementById("inventory-grid");
+
+  for (let i = 0; i < ITEM_COUNT; i++) {
+    const slot = document.createElement("div");
+    slot.className = "inventory-slot";
+
+    const container = document.createElement("div");
+    container.className = "item-container";
+
+    const item = document.createElement("img");
+    item.src = `inv_${i + 1}.png`;
+    item.className = "inventory-item";
+    item.dataset.index = i;
+    item.draggable = false;
+
+    const overlay = document.createElement("img");
+    overlay.src = "overlay.png";
+    overlay.className = "overlay-item";
+    overlay.dataset.index = i;
+    overlay.draggable = false;
+
+    container.appendChild(item);
+    container.appendChild(overlay);
+    slot.appendChild(container);
+    grid.appendChild(slot);
+  }
+}
+
+/* -----------------------------
    UPDATE UI FROM DATABASE
 --------------------------------*/
 function updateOverlays(statuses) {
@@ -33,7 +70,7 @@ function updateOverlays(statuses) {
 }
 
 /* -----------------------------
-   REALTIME LISTENER
+   REALTIME LISTENERS
 --------------------------------*/
 function listenForOverlayChanges() {
   const statusRef = ref(db, "overlayStatus");
@@ -44,7 +81,6 @@ function listenForOverlayChanges() {
   });
 }
 
-
 function listenForTeamName() {
   const teamNameRef = ref(db, "siteConfig/teamName");
 
@@ -52,43 +88,36 @@ function listenForTeamName() {
     if (!snapshot.exists()) return;
 
     const teamName = snapshot.val();
-
-    // Update browser tab title
     document.title = teamName;
 
-    // Update visible page title if present
     const h1 = document.getElementById("team-title");
-    if (h1) {
-      h1.textContent = teamName;
-    }
+    if (h1) h1.textContent = teamName;
   });
 }
 
 /* -----------------------------
-   WRITE STATUS TO FIREBASE
+   ATOMIC TOGGLE (IMPORTANT)
 --------------------------------*/
-function updateStatusInFirebase(index, status) {
+function toggleOverlayInFirebase(index) {
   const statusRef = ref(db, `overlayStatus/${index + 1}`);
-  set(statusRef, { status });
+
+  runTransaction(statusRef, currentData => {
+    const currentStatus = currentData?.status ?? 0;
+    return { status: currentStatus === 1 ? 0 : 1 };
+  });
 }
 
 /* -----------------------------
-   CLICK HANDLERS
+   INPUT HANDLERS (FAST SAFE)
 --------------------------------*/
 function addItemClickListeners() {
   document.querySelectorAll(".item-container").forEach(container => {
     const inventoryItem = container.querySelector(".inventory-item");
     const index = Number(inventoryItem.dataset.index);
 
-    container.addEventListener("click", () => {
-      const overlay = container.querySelector(".overlay-item");
-      if (!overlay) return;
-
-      const isVisible = overlay.style.display === "block";
-      const newStatus = isVisible ? 0 : 1;
-
-      // Only write to Firebase, let onValue handle UI
-      updateStatusInFirebase(index, newStatus);
+    container.addEventListener("pointerdown", e => {
+      e.preventDefault(); // prevents drag/select edge cases
+      toggleOverlayInFirebase(index);
     });
   });
 }
@@ -97,7 +126,8 @@ function addItemClickListeners() {
    INIT
 --------------------------------*/
 document.addEventListener("DOMContentLoaded", () => {
-  listenForOverlayChanges();   // LIVE SYNC
-  addItemClickListeners();     // attach click handlers
+  buildInventoryGrid();
+  listenForOverlayChanges();
+  addItemClickListeners();
   listenForTeamName();
 });
