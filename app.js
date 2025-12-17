@@ -11,13 +11,13 @@ const ITEM_COUNT = 28;
    FIREBASE CONFIG
 --------------------------------*/
 const firebaseConfig = {
-  apiKey: "AIzaSyC4-REmLiLySPPnvDvHeE3-lUP64iApC-o",
-  authDomain: "huntsitetest.firebaseapp.com",
-  databaseURL: "https://huntsitetest-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "huntsitetest",
-  storageBucket: "huntsitetest.firebasestorage.app",
-  messagingSenderId: "738219939866",
-  appId: "1:738219939866:web:fa69cbc6d30ffea78f99a3"
+  apiKey: "AIzaSyDNSd6smxpEtppVuEhtRaC-19XcyPNglP0",
+  authDomain: "huntsite-64e23.firebaseapp.com",
+  databaseURL: "https://huntsite-64e23-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "huntsite-64e23",
+  storageBucket: "huntsite-64e23.firebasestorage.app",
+  messagingSenderId: "1063124348808",
+  appId: "1:1063124348808:web:c9e835ad82edada18c143d"
 };
 
 /* -----------------------------
