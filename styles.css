@@ -90,7 +90,17 @@ h1 {
     z-index: 3; /* Ensure it's above the inventory item */
 }
 
-/* Disable text and image selection */
+/* Ensure hover + title tooltips work correctly */
+.inventory-item {
+    pointer-events: auto;
+}
+
+/* Overlay must never intercept hover or clicks */
+.overlay-item {
+    pointer-events: none;
+}
+
+/* Disable text/image selection without breaking hover */
 * {
     -webkit-user-select: none;
     -moz-user-select: none;
